@@ -57,13 +57,13 @@ function App() {
 
 The accessibility toolbar automatically attaches to the document body.
 or
-Add className="a1s-root" to div on which it should apply only.
+Add id="a1s-root" to div on which it should apply only.
 
 ```jsx
 function App() {
   return (
     <>
-      <div className="als-root">
+      <div id="als-root">
         ...
         {content}
       </div>
