@@ -1,24 +1,34 @@
 {
   "name": "accessibility-tool",
   "version": "1.0.0",
-  "description": "",
+  "description": "Plug-and-play accessibility toolbar for React applications",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --mode production"
+  "types": "index.d.ts",
+  "sideEffects": [
+    "accessibility-tool.css"
+  ],
+  "files": [
+    "index.js",
+    "AccessibilityTool.js",
+    "accessibility-tool.css",
+    "index.d.ts"
+  ],
+  "peerDependencies": {
+    "react": ">=16.8"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@babel/core": "^7.28.4",
-    "@babel/preset-env": "^7.28.3",
-    "babel-loader": "^10.0.0",
-    "css-loader": "^7.1.2",
-    "mini-css-extract-plugin": "^2.9.4",
-    "style-loader": "^4.0.0",
-    "terser-webpack-plugin": "^5.3.14",
-    "webpack": "^5.102.1",
-    "webpack-cli": "^6.0.1"
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "react",
+    "wcag",
+    "ui",
+    "toolbar",
+    "frontend"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noobster101-ui//accessibility-tool"
   }
 }
