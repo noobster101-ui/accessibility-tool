@@ -1,5 +1,5 @@
 {
-  "name": "accessibility-tool",
+  "name": "react-accessibility-tool",
   "version": "1.0.0",
   "description": "Plug-and-play accessibility toolbar for React applications",
   "main": "index.js",
@@ -25,10 +25,10 @@
     "toolbar",
     "frontend"
   ],
-  "author": "Your Name",
+  "author": "Rakesh Singh",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/noobster101-ui//accessibility-tool"
+    "url": "https://github.com/noobster101-ui/react-accessibility-tool"
   }
 }
