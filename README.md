@@ -1,9 +1,3 @@
-Sure 👍
-Below is the **README.md content in plain text**.
-You can copy-paste this directly into a `README.md` file.
-
----
-
 # Accessibility Tool (React)
 
 A plug-and-play accessibility toolbar for React applications that allows users to customize visual and reading preferences in real time.
@@ -62,6 +56,23 @@ function App() {
 ```
 
 The accessibility toolbar automatically attaches to the document body.
+or
+Add className="a1s-root" to div on which it should apply only.
+
+```jsx
+function App() {
+  return (
+    <>
+      <div className="als-root">
+        ...
+        {content}
+      </div>
+      <AccessibilityTool right="20px" bottom="20px" bgColor="#000" textColor="#fff" />
+      {/* Your application content */}
+    </>
+  );
+}
+```
 
 ---
 
