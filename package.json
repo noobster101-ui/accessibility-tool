@@ -1,6 +1,6 @@
 {
   "name": "react-accessibility-tool",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Plug-and-play accessibility toolbar for React applications",
   "main": "index.js",
   "types": "index.d.ts",
