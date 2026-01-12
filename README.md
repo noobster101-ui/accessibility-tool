@@ -28,13 +28,13 @@ This tool improves usability and accessibility without changing your existing la
 Using npm:
 
 ```
-npm install accessibility-tool
+npm install react-accessibility-tool
 ```
 
 Using yarn:
 
 ```
-yarn add accessibility-tool
+yarn add react-accessibility-tool
 ```
 
 ---
@@ -44,8 +44,8 @@ yarn add accessibility-tool
 ### 1. Import the component and CSS
 
 ```js
-import AccessibilityTool from "accessibility-tool";
-import "accessibility-tool/accessibility-tool.css";
+import AccessibilityTool from "react-accessibility-tool";
+import "react-accessibility-tool/accessibility-tool.css";
 ```
 
 ### 2. Use the component in your app
