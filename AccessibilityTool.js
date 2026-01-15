@@ -1,6 +1,13 @@
+"use client";
+
 import { useEffect } from "react";
 
 export default function AccessibilityTool({ right, bottom, top, left, bgColor, textColor }) {
+  // Only run on client side to avoid SSR issues
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.__A1S_INIT__) return;
@@ -194,36 +201,6 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
         });
 
       renderBullets(btn, A1S_STATE.zoom);
-    }
-    function zoomOut() {
-      if (A1S_STATE.zoom <= 0) return;
-
-      A1S_STATE.zoom--;
-
-      A1S_ROOT()
-        .querySelectorAll(A1S_TEXT_SELECTORS)
-        .forEach((el) => {
-          const base = A1S_ORIGINAL_FONT_SIZES.get(el);
-          if (!base) return;
-
-          if (A1S_STATE.zoom === 0) {
-            el.style.fontSize = "";
-            A1S_ORIGINAL_FONT_SIZES.delete(el);
-          } else {
-            el.style.fontSize = base * (1 + A1S_STATE.zoom * 0.1) + "px";
-          }
-        });
-
-      // update zoom-in bullets automatically
-      const zoomInBtn = Array.from(document.querySelectorAll(".a1s_button")).find(
-        (b) => b.querySelector(".a1s_label")?.textContent === "Zoom In"
-      );
-
-      if (zoomInBtn) renderBullets(zoomInBtn, A1S_STATE.zoom);
-
-      if (zoomInBtn) {
-        renderBullets(zoomInBtn.closest(".a1s_button"), A1S_STATE.zoom);
-      }
     }
 
     /* =========================================================

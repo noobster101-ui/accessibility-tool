@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accessibility Tool - Universal Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    h2 {
+      color: #444;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      color: #555;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+
+    .status.valid {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status.invalid {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status.warning {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    code {
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    pre {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.85em;
+      line-height: 1.5;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .feature {
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .feature.enabled {
+      background: #d4edda;
+    }
+
+    .feature.disabled {
+      background: #f8d7da;
+    }
+
+    .platform-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .platform-badge.nextjs {
+      background: #000;
+      color: #fff;
+    }
+
+    .platform-badge.react {
+      background: #61dafb;
+      color: #000;
+    }
+
+    .platform-badge.vue {
+      background: #42b883;
+      color: #fff;
+    }
+
+    .platform-badge.angular {
+      background: #dd0031;
+      color: #fff;
+    }
+
+    .platform-badge.html {
+      background: #e34c26;
+      color: #fff;
+    }
+
+    .platform-badge.wordpress {
+      background: #21759b;
+      color: #fff;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .nav-tab {
+      padding: 10px 20px;
+      border: none;
+      background: #ddd;
+      border-radius: 4px 4px 0 0;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .nav-tab.active {
+      background: #fff;
+      font-weight: 600;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .copy-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 5px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
+      margin-left: 10px;
+    }
+
+    .copy-btn:hover {
+      background: #0056b3;
+    }
+
+    .copy-btn.copied {
+      background: #28a745;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🔧 Accessibility Tool - Universal Demo</h1>
+
+  <div class="card">
+    <h2>📋 License Status</h2>
+    <div id="license-status">Checking...</div>
+    <p id="license-message"></p>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Features</h2>
+    <div class="features">
+      <div class="feature" id="feature-toolbar">
+        <strong>Toolbar</strong><br>
+        <small>Visual accessibility controls</small>
+      </div>
+      <div class="feature" id="feature-scan">
+        <strong>Scanning</strong><br>
+        <small>WCAG compliance checking</small>
+      </div>
+      <div class="feature" id="feature-report">
+        <strong>Report Export</strong><br>
+        <small>PDF/HTML compliance reports</small>
+      </div>
+      <div class="feature" id="feature-compliance">
+        <strong>Compliance</strong><br>
+        <small>WCAG 2.1 AA standards</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Platform Tabs -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('nextjs')">Next.js</button>
+    <button class="nav-tab" onclick="showTab('react')">React CRA/Vite</button>
+    <button class="nav-tab" onclick="showTab('vue')">Vue.js</button>
+    <button class="nav-tab" onclick="showTab('angular')">Angular</button>
+    <button class="nav-tab" onclick="showTab('html')">Plain HTML/JS</button>
+    <button class="nav-tab" onclick="showTab('wordpress')">WordPress</button>
+  </div>
+
+  <!-- Next.js Tab -->
+  <div id="nextjs" class="tab-content active">
+    <div class="card">
+      <h2>
+        <span class="platform-badge nextjs">Next.js</span>
+        App Router (Recommended)
+      </h2>
+      <p>For Next.js 13+ App Router, add "use client" directive to mark the component as client-side.</p>
+
+      <h3>1. Install Package</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>npm install react-accessibility-tool
+# or
+yarn add react-accessibility-tool</pre>
+
+      <h3>2. Create a Client Component (src/components/AccessibilityWrapper.jsx)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>"use client";
+
+import AccessibilityTool from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+export default function AccessibilityWrapper() {
+  return <AccessibilityTool />;
+}</pre>
+
+      <h3>3. Use in Layout (src/app/layout.js)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import AccessibilityWrapper from '@/components/AccessibilityWrapper';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <AccessibilityWrapper />
+      </body>
+    </html>
+  );
+}</pre>
+
+      <h3>4. With License Validation</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>"use client";
+
+import { useEffect, useState } from 'react';
+import AccessibilityTool from 'react-accessibility-tool';
+import { authorizeUsage, hasPaidFeatures } from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+export default function AccessibilityWrapper() {
+  const [authResult, setAuthResult] = useState(null);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const result = await authorizeUsage({
+        licenseKey: process.env.NEXT_PUBLIC_LICENSE_KEY,
+        domain: window.location.hostname
+      });
+      setAuthResult(result);
+    };
+    initAuth();
+  }, []);
+
+  // Check if paid features are enabled based on auth result
+  const isPro = hasPaidFeatures(authResult);
+
+  return (
+    <>
+      {isPro &amp;&amp; <span className="pro-badge">PRO</span>}
+      <AccessibilityTool />
+    </>
+  );
+}</pre>
+
+      <h3>5. With Custom Positioning</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>"use client";
+
+import AccessibilityTool from 'react-accessibility-tool';
+
+export default function AccessibilityWrapper() {
+  return (
+    <AccessibilityTool
+      right="30px"
+      bottom="30px"
+      bgColor="#1a365d"
+      textColor="#ffffff"
+    />
+  );
+}</pre>
+    </div>
+  </div>
+
+  <!-- React CRA/Vite Tab -->
+  <div id="react" class="tab-content">
+    <div class="card">
+      <h2>
+        <span class="platform-badge react">React</span>
+        Create React App / Vite
+      </h2>
+      <p>For traditional React applications, no special directives needed.</p>
+
+      <h3>1. Install Package</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>npm install react-accessibility-tool
+# or
+yarn add react-accessibility-tool</pre>
+
+      <h3>2. Basic Setup (src/App.jsx)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import AccessibilityTool from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+function App() {
+  return (
+    <div className="App">
+      <h1>My Accessible App</h1>
+      <p>Welcome to my accessible React app!</p>
+      <AccessibilityTool />
+    </div>
+  );
+}
+
+export default App;</pre>
+
+      <h3>3. With Custom Props</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import AccessibilityTool from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+function App() {
+  return (
+    <div className="App">
+      <h1>My Accessible App</h1>
+      <AccessibilityTool
+        right="20px"
+        bottom="20px"
+        top="auto"
+        left="auto"
+        bgColor="#2c5282"
+        textColor="#ffffff"
+      />
+    </div>
+  );
+}</pre>
+
+      <h3>4. With Authorization API</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import { useEffect, useState } from 'react';
+import AccessibilityTool, { authorizeUsage, hasPaidFeatures } from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+function App() {
+  const [authResult, setAuthResult] = useState(null);
+
+  useEffect(() => {
+    const initAuth = async () => {
+      const result = await authorizeUsage({
+        licenseKey: process.env.REACT_APP_LICENSE_KEY,
+        domain: window.location.hostname
+      });
+      setAuthResult(result);
+    };
+    initAuth();
+  }, []);
+
+  // Check if paid features are enabled based on auth result
+  const isPro = hasPaidFeatures(authResult);
+
+  return (
+    <div className="App">
+      <h1>My Accessible App</h1>
+      {isPro &amp;&amp; <p>✅ PRO License Active</p>}
+      <AccessibilityTool />
+    </div>
+  );
+}
+
+export default App;</pre>
+
+      <h3>5. Available Exports</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// Main component
+import AccessibilityTool from 'react-accessibility-tool';
+
+// Authorization functions
+import {
+  authorizeUsage,      // Main authorization function
+  hasPaidFeatures,     // Check if PRO features enabled
+  isProOrHigher,       // Check if PRO or Enterprise
+  isFullyAuthorized,   // Check if fully authorized
+  getAuthStatusMessage, // Get status message
+  clearAuthCache,      // Clear cached auth
+  getUsageStats,       // Get usage statistics
+  getLicenseMetadata,  // Get license details for reports
+} from 'react-accessibility-tool';
+
+// Legacy license functions (also available)
+import {
+  validateLicense,
+  isLicenseValid,
+  getLicenseInfo,
+  clearLicenseCache,
+  getLicenseStatusMessage,
+} from 'react-accessibility-tool';
+
+// PDF Report functions
+import {
+  generateAuditPdf,
+  generateHtmlAuditReport,
+  getVersion,
+} from 'react-accessibility-tool';</pre>
+    </div>
+  </div>
+
+  <!-- Vue.js Tab -->
+  <div id="vue" class="tab-content">
+    <div class="card">
+      <h2>
+        <span class="platform-badge vue">Vue.js</span>
+        Vue 3 Composition API
+      </h2>
+      <p>Use React component inside Vue with a wrapper component.</p>
+
+      <h3>1. Install Dependencies</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>npm install react react-dom react-accessibility-tool</pre>
+
+      <h3>2. Create React Wrapper Component</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><!-- src/components/AccessibilityReact.vue -->
+<template>
+  <div ref="container" class="accessibility-react-wrapper"></div>
+</template>
+
+<script setup>
+  import { onMounted, onUnmounted, ref } from 'vue';
+  import React from 'react';
+  import ReactDOM from 'react-dom/client';
+  import AccessibilityTool from 'react-accessibility-tool';
+  import 'react-accessibility-tool/accessibility-tool.css';
+
+  const container = ref(null);
+  let root = null;
+
+  onMounted(() => {
+    if (container.value) {
+      root = ReactDOM.createRoot(container.value);
+      root.render(React.createElement(AccessibilityTool));
+    }
+  });
+
+  onUnmounted(() => {
+    if (root) {
+      root.unmount();
+    }
+  });
+</script>
+
+<style scoped>
+.accessibility-react-wrapper {
+  position: fixed;
+  z-index: 99999;
+}
+</style></pre>
+
+      <h3>3. Use in Vue App (src/App.vue)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><template>
+  <div id="app">
+    <h1>My Vue App</h1>
+    <p>This app has an accessibility toolbar!</p>
+    <AccessibilityReact />
+  </div>
+</template>
+
+<script setup>
+  import AccessibilityReact from './components/AccessibilityReact.vue';
+</script></pre>
+
+      <h3>4. Or Use via Vite Plugin (vite.config.js)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// Install: npm install @vitejs/plugin-react
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    react(),
+  ],
+});</pre>
+    </div>
+  </div>
+
+  <!-- Angular Tab -->
+  <div id="angular" class="tab-content">
+    <div class="card">
+      <h2>
+        <span class="platform-badge angular">Angular</span>
+        Angular 14+
+      </h2>
+      <p>Lazy load React component in Angular application.</p>
+
+      <h3>1. Install Dependencies</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>npm install react react-dom react-accessibility-tool
+# For Angular 17+ with standalone components
+npm install @angular/core@latest @angular/common@latest</pre>
+
+      <h3>2. Create React Component (src/app/accessibility-tool.component.tsx)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import { Component, OnInit, OnDestroy } from '@angular/core';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom/client';
+import AccessibilityTool from 'react-accessibility-tool';
+
+@Component({
+  selector: 'app-accessibility-tool',
+  template: '<div #container></div>',
+  standalone: true,
+})
+export class AccessibilityToolComponent implements OnInit, OnDestroy {
+  private container: HTMLElement | null = null;
+  private root: any = null;
+
+  ngOnInit() {
+    // Create container element
+    this.container = document.createElement('div');
+    this.container.id = 'accessibility-react-wrapper';
+    this.container.style.position = 'fixed';
+    this.container.style.zIndex = '99999';
+    document.body.appendChild(this.container);
+
+    // Mount React component
+    this.root = ReactDOM.createRoot(this.container);
+    this.root.render(React.createElement(AccessibilityTool));
+  }
+
+  ngOnDestroy() {
+    if (this.root) {
+      this.root.unmount();
+    }
+    if (this.container) {
+      document.body.removeChild(this.container);
+    }
+  }
+}</pre>
+
+      <h3>3. Use in Angular Template</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><!-- app.component.html -->
+<header>
+  <h1>My Angular App</h1>
+</header>
+<main>
+  <router-outlet></router-outlet>
+</main>
+<app-accessibility-tool></app-accessibility-tool></pre>
+
+      <h3>4. Register Standalone Component (app.component.ts)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import { Component } from '@angular/core';
+import { AccessibilityToolComponent } from './accessibility-tool.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [AccessibilityToolComponent],
+  templateUrl: './app.component.html',
+})
+export class AppComponent {
+  title = 'my-angular-app';
+}</pre>
+    </div>
+  </div>
+
+  <!-- Plain HTML Tab -->
+  <div id="html" class="tab-content">
+    <div class="card">
+      <h2>
+        <span class="platform-badge html">HTML</span>
+        Plain HTML / JavaScript
+      </h2>
+      <p>Bundle the React component for use in plain HTML pages.</p>
+
+      <h3>1. Install and Build Bundle</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button># Clone and build the package
+git clone https://github.com/noobster101-ui/react-accessibility-tool.git
+cd react-accessibility-tool
+npm install
+npx esbuild AccessibilityTool.js \
+  --bundle \
+  --outfile=dist/accessibility-tool.js \
+  --format=iife \
+  --global-name=AccessibilityTool \
+  --platform=browser \
+  --external:react \
+  --external:react-dom</pre>
+
+      <h3>2. Include in HTML</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Accessible Website</title>
+  <link rel="stylesheet" href="path/to/accessibility-tool.css">
+</head>
+<body>
+  <h1>Welcome to My Website</h1>
+  <p>This page has an accessibility toolbar.</p>
+
+  <!-- React dependencies from CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Your bundled accessibility tool -->
+  <script src="dist/accessibility-tool.js"></script>
+
+  <!-- Initialize -->
+  <script>
+    // The component auto-initializes
+    // Check for toolbar after page load
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        var toolbarBtn = document.querySelector('.a1s_float-button');
+        if (toolbarBtn) {
+          console.log('✅ Accessibility toolbar loaded successfully!');
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html></pre>
+
+      <h3>3. With License Validation (Browser API)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><!-- Include browser license validation -->
+<script src="license-browser.js"></script>
+
+<script>
+  // Initialize license validation
+  async function initLicense() {
+    const result = await LicenseValidate.autoValidate({
+      licenseKey: null, // or your license key
+      domain: window.location.hostname
+    });
+
+    console.log('License status:', LicenseValidate.getLicenseStatusMessage());
+    console.log('Has paid features:', LicenseValidate.hasPaidFeatures());
+
+    return result;
+  }
+
+  initLicense();
+</script></pre>
+
+      <h3>4. Browser API Reference</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// LicenseValidate global object methods:
+LicenseValidate.validate({ licenseKey, domain })
+  // Returns: Promise with license validation result
+
+LicenseValidate.autoValidate({ licenseKey, domain })
+  // Auto-detects domain, returns Promise with validation result
+
+LicenseValidate.hasPaidFeatures()
+  // Returns: boolean (true if PRO/Enterprise)
+
+LicenseValidate.isLicenseValid()
+  // Returns: boolean
+
+LicenseValidate.getLicenseInfo()
+  // Returns: LicenseResult object or null
+
+LicenseValidate.clearLicenseCache()
+  // Clears cached license data
+
+LicenseValidate.getLicenseStatusMessage()
+  // Returns: string status message
+
+LicenseValidate.getCurrentDomain()
+  // Returns: current hostname</pre>
+    </div>
+  </div>
+
+  <!-- WordPress Tab -->
+  <div id="wordpress" class="tab-content">
+    <div class="card">
+      <h2>
+        <span class="platform-badge wordpress">WordPress</span>
+        WordPress Integration
+      </h2>
+
+      <h3>1. Enqueue Scripts (functions.php)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><?php
+function enqueue_accessibility_tool() {
+  // Enqueue React and ReactDOM from CDN
+  wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18', true);
+  wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18', true);
+
+  // Enqueue accessibility tool bundle
+  wp_enqueue_script('accessibility-tool', get_template_directory_uri() . '/js/accessibility-tool.js', array('react', 'react-dom'), '1.0.0', true);
+
+  // Enqueue styles
+  wp_enqueue_style('accessibility-tool', get_template_directory_uri() . '/css/accessibility-tool.css');
+}
+add_action('wp_enqueue_scripts', 'enqueue_accessibility_tool');
+?></pre>
+
+      <h3>2. Add to Footer (functions.php)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><?php
+function add_accessibility_to_footer() {
+  // Create container for React component
+  echo '<div id="accessibility-tool-container"></div>';
+
+  // Initialize the toolbar
+  echo '<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Wait for React to be ready
+      if (typeof React !== "undefined" & amp;& amp; typeof ReactDOM !== "undefined") {
+      console.log("Accessibility Tool initializing...");
+    }
+    });
+  </script>';
+}
+add_action('wp_footer', 'add_accessibility_to_footer', 100);
+?></pre>
+
+      <h3>3. Create Shortcode (functions.php)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><?php
+function accessibility_tool_shortcode($atts) {
+  ob_start();
+  ?>
+  <div id="accessibility-tool-wrapper"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Initialize license validation
+      if (typeof LicenseValidate !== 'undefined') {
+        LicenseValidate.autoValidate({
+          domain: window.location.hostname
+        }).then(function (result) {
+          console.log('License:', LicenseValidate.getLicenseStatusMessage());
+        });
+      }
+    });
+  </script>
+  <?php
+  return ob_get_clean();
+}
+add_shortcode('accessibility_tool', 'accessibility_tool_shortcode');
+?></pre>
+
+      <h3>4. Use Shortcode in Pages</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><!-- In any WordPress page, post, or widget -->
+[accessibility_tool]
+
+<!-- With custom position via CSS class -->
+[accessibility_tool]</pre>
+
+      <h3>5. Complete Plugin (wp-content/plugins/accessibility-tool.php)</h3>
+      <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><?php
+/**
+ * Plugin Name: Accessibility Tool
+ * Description: Add accessibility toolbar to your WordPress site
+ * Version: 1.0.0
+ * Author: Your Name
+ */
+
+if (!defined('ABSPATH')) exit;
+
+class AccessibilityToolPlugin {
+  public function __construct() {
+    add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
+    add_action('wp_footer', array($this, 'render_toolbar'));
+  }
+
+  public function enqueue_assets() {
+    // React dependencies
+    wp_enqueue_script('react', 'https://unpkg.com/react@18/umd/react.production.min.js', array(), '18', true);
+    wp_enqueue_script('react-dom', 'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js', array('react'), '18', true);
+
+    // Bundle your React component
+    wp_enqueue_script('accessibility-tool', plugin_dir_url(__FILE__) . 'js/accessibility-tool.js', array('react', 'react-dom'), '1.0.0', true);
+    wp_enqueue_style('accessibility-tool', plugin_dir_url(__FILE__) . 'css/accessibility-tool.css');
+
+    // Localize script for license key if set
+    $license_key = get_option('accessibility_tool_license_key', '');
+    wp_localize_script('accessibility-tool', 'AccessibilityToolConfig', array(
+      'licenseKey' => $license_key,
+      'domain' => $_SERVER['HTTP_HOST'],
+    ));
+  }
+
+  public function render_toolbar() {
+    echo '<div id="accessibility-tool-container"></div>';
+    echo '<script>
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof LicenseValidate !== "undefined") {
+          LicenseValidate.autoValidate({ domain: window.location.hostname });
+        }
+      });
+    </script>';
+  }
+}
+
+new AccessibilityToolPlugin();
+
+// Admin settings page
+if (is_admin()) {
+  require_once plugin_dir_path(__FILE__) . 'admin-settings.php';
+}
+?></pre>
+    </div>
+  </div>
+
+  <!-- Quick Start Guide -->
+  <div class="card">
+    <h2>🚀 Quick Start Guide</h2>
+    <p>Here are the most common ways to use the Accessibility Tool in your projects:</p>
+
+    <h3>1. Basic React Usage (Inline)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// In any React component (Next.js, CRA, Vite)
+import AccessibilityTool from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+function MyComponent() {
+  return (
+    <div>
+      <h1>My Website</h1>
+      <AccessibilityTool />
+    </div>
+  );
+}</pre>
+
+    <h3>2. With Custom Styling</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// Customize position and colors
+<AccessibilityTool
+  right="20px"
+  bottom="20px"
+  bgColor="#1a73e8"
+  textColor="#ffffff"
+/></pre>
+
+    <h3>3. Next.js App Router (Simplest)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// 1. Create src/components/AccessibilityWrapper.jsx
+"use client";
+import AccessibilityTool from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+export default function AccessibilityWrapper() {
+  return <AccessibilityTool />;
+}
+
+// 2. Add to src/app/layout.js
+import AccessibilityWrapper from '@/components/AccessibilityWrapper';
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+      <body>
+        {children}
+        <AccessibilityWrapper />
+      </body>
+    </html>
+  );
+}</pre>
+
+    <h3>4. React with License Check</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>import { useEffect, useState } from 'react';
+import AccessibilityTool, { authorizeUsage, hasPaidFeatures } from 'react-accessibility-tool';
+import 'react-accessibility-tool/accessibility-tool.css';
+
+function App() {
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    const checkLicense = async () => {
+      const result = await authorizeUsage({
+        licenseKey: process.env.REACT_APP_LICENSE_KEY,
+        domain: window.location.hostname
+      });
+      setIsPro(hasPaidFeatures(result));
+    };
+    checkLicense();
+  }, []);
+
+  return (
+    <div>
+      <h1>My Website</h1>
+      {isPro && <span className="pro-badge">PRO</span>}
+      <AccessibilityTool />
+    </div>
+  );
+}</pre>
+
+    <h3>5. Plain HTML (CDN)</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button><script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="path/to/accessibility-tool.js"></script>
+<script>
+  // Auto-initializes when React and the script load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const btn = document.querySelector('.a1s_float-button');
+      if (btn) console.log('✅ Accessibility toolbar ready!');
+    }, 500);
+  });
+</script></pre>
+  </div>
+
+  <!-- Test Scenarios -->
+  <div class="card">
+    <h2>🧪 Test Different Scenarios</h2>
+    <p>Open browser console and try these commands:</p>
+
+    <h3>Free Mode Testing</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// Test free mode (no license)
+await LicenseValidate.clearLicenseCache();
+const free = await LicenseValidate.validate({
+  licenseKey: null,
+  domain: window.location.hostname
+});
+console.log('Free mode result:', free);
+
+// Check current status
+console.log('Has paid features:', LicenseValidate.hasPaidFeatures());
+console.log('Status message:', LicenseValidate.getLicenseStatusMessage());</pre>
+
+    <h3>License Validation Testing</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// Clear cache and test with invalid license
+await LicenseValidate.clearLicenseCache();
+const invalid = await LicenseValidate.validate({
+  licenseKey: 'pk_test_invalid123456',
+  domain: window.location.hostname
+});
+console.log('Invalid license result:', invalid);
+
+// Test with real license (contact for license key)
+const valid = await LicenseValidate.validate({
+  licenseKey: 'pk_live_your_license_key',
+  domain: 'yourdomain.com'
+});
+console.log('Valid license result:', valid);</pre>
+
+    <h3>Accessibility Toolbar Testing</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// Check if toolbar is initialized
+const toolbarBtn = document.querySelector('.a1s_float-button');
+console.log('Toolbar button exists:', !!toolbarBtn);
+
+// Check if sidebar works
+const sidebar = document.querySelector('.a1s_sidebar');
+console.log('Sidebar exists:', !!sidebar);
+
+// Test toolbar functionality
+if (toolbarBtn) {
+  toolbarBtn.click();
+  console.log('Toolbar opened!');
+}
+
+// Test close button
+const closeBtn = document.querySelector('.a1s_close-button');
+if (closeBtn) {
+  closeBtn.click();
+  console.log('Toolbar closed!');
+}</pre>
+
+    <h3>License API Response Structure</h3>
+    <pre><button class="copy-btn" onclick="copyCode(this)">Copy</button>// LicenseResult object structure:
+{
+  valid: boolean,           // Is license valid
+  authorized: boolean,      // Is user authorized
+  tier: 'free'|'pro'|'enterprise',
+  domain: string,           // Licensed domain
+  authorizedAt: string,     // ISO date string
+  expiresAt: Date|null,     // Expiration date
+  message: string,          // Status message
+  fromCache: boolean,       // Came from cache
+  error: string|null        // Error message if failed
+}</pre>
+  </div>
+
+  <!-- License Validation Script -->
+  <script src="license-browser.js"></script>
+
+  <script>
+    // Tab navigation
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Copy code button
+    function copyCode(btn) {
+      const pre = btn.parentElement;
+      const code = pre.innerText.replace('Copy', '').trim();
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // License demo initialization
+    async function initLicenseDemo() {
+      const statusEl = document.getElementById('license-status');
+      const messageEl = document.getElementById('license-message');
+
+      // Auto-validate with current domain
+      const result = await LicenseValidate.autoValidate({
+        licenseKey: null // Set your license key here to test paid features
+      });
+
+      // Update UI
+      statusEl.className = 'status ' + (result.valid ? 'valid' : 'warning');
+      statusEl.textContent = LicenseValidate.getLicenseStatusMessage(result);
+
+      messageEl.textContent = result.error || 'All features available in free mode';
+
+      // Update feature indicators
+      document.getElementById('feature-toolbar').className =
+        'feature enabled';
+      document.getElementById('feature-scan').className =
+        'feature enabled';
+      document.getElementById('feature-report').className =
+        'feature ' + (LicenseValidate.hasPaidFeatures() ? 'enabled' : 'disabled');
+      document.getElementById('feature-compliance').className =
+        'feature ' + (LicenseValidate.hasPaidFeatures() ? 'enabled' : 'disabled');
+
+      // Log for debugging
+      console.log('=== Accessibility Tool Demo ===');
+      console.log('License Result:', result);
+      console.log('Has Paid Features:', LicenseValidate.hasPaidFeatures());
+      console.log('License Status Message:', LicenseValidate.getLicenseStatusMessage());
+      console.log('=============================');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initLicenseDemo);
+  </script>
+</body>
+
+</html>

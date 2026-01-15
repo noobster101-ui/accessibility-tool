@@ -1,8 +1,12 @@
 {
   "name": "react-accessibility-tool",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Plug-and-play accessibility toolbar for React applications",
+  "type": "module",
   "main": "index.js",
+  "bin": {
+    "a11y-scan": "./bin/cli.js"
+  },
   "types": "index.d.ts",
   "sideEffects": [
     "accessibility-tool.css"
@@ -11,6 +15,12 @@
     "index.js",
     "AccessibilityTool.js",
     "accessibility-tool.css",
+    "license.js",
+    "authorization.js",
+    "license-browser.js",
+    "example-universal.html",
+    "pdf-report.js",
+    "bin/",
     "index.d.ts"
   ],
   "peerDependencies": {
