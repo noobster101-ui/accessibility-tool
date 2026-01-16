@@ -195,36 +195,6 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
 
       renderBullets(btn, A1S_STATE.zoom);
     }
-    function zoomOut() {
-      if (A1S_STATE.zoom <= 0) return;
-
-      A1S_STATE.zoom--;
-
-      A1S_ROOT()
-        .querySelectorAll(A1S_TEXT_SELECTORS)
-        .forEach((el) => {
-          const base = A1S_ORIGINAL_FONT_SIZES.get(el);
-          if (!base) return;
-
-          if (A1S_STATE.zoom === 0) {
-            el.style.fontSize = "";
-            A1S_ORIGINAL_FONT_SIZES.delete(el);
-          } else {
-            el.style.fontSize = base * (1 + A1S_STATE.zoom * 0.1) + "px";
-          }
-        });
-
-      // update zoom-in bullets automatically
-      const zoomInBtn = Array.from(document.querySelectorAll(".a1s_button")).find(
-        (b) => b.querySelector(".a1s_label")?.textContent === "Zoom In"
-      );
-
-      if (zoomInBtn) renderBullets(zoomInBtn, A1S_STATE.zoom);
-
-      if (zoomInBtn) {
-        renderBullets(zoomInBtn.closest(".a1s_button"), A1S_STATE.zoom);
-      }
-    }
 
     /* =========================================================
    TOGGLES (ON / OFF)
@@ -263,24 +233,23 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
       A1S_ROOT().style.lineHeight = A1S_STATE.lineHeight === 0 ? "" : 1.6 + A1S_STATE.lineHeight * 0.2;
       renderBullets(btn, A1S_STATE.lineHeight);
     }
+
     function toggleTextAlign(btn) {
       const root = A1S_ROOT();
       const classes = ["a1s_align-left", "a1s_align-center", "a1s_align-right", "a1s_align-justify"];
 
-      // initialize state
-      if (typeof A1S_STATE.textAlign !== "number") {
-        A1S_STATE.textAlign = 0;
-      }
-
-      // increment state (0 → 1 → 2 → 3 → 0)
-      A1S_STATE.textAlign = (A1S_STATE.textAlign + 1) % classes.length;
-
-      // remove all alignment classes
+      // remove all saturation classes
       root.classList.remove(...classes);
 
-      // apply the correct class
-      root.classList.add(classes[A1S_STATE.textAlign]);
+      // increment state
+      A1S_STATE.textAlign = (A1S_STATE.textAlign + 1) % 5;
 
+      // apply class if not default (0)
+      if (A1S_STATE.textAlign > 0) {
+        root.classList.add(classes[A1S_STATE.textAlign - 1]);
+      }
+
+      // update bullets
       renderBullets(btn, A1S_STATE.textAlign);
     }
 
