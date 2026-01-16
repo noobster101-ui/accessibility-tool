@@ -1,13 +1,82 @@
 import { useEffect } from "react";
 
-export default function AccessibilityTool({ right, bottom, top, left, bgColor, textColor }) {
+export default function AccessibilityTool({ right, bottom, top, left, bgColor, textColor, pro = false }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.__A1S_INIT__) return;
-    window.__A1S_INIT__ = true;
+
+    // Pro configuration - support both boolean and object
+    const proConfig =
+      typeof pro === "boolean"
+        ? { enabled: pro, features: { tooltip: pro, darkMode: pro, textToSpeech: pro } }
+        : {
+            enabled: false,
+            features: {
+              tooltip: false,
+              darkMode: false,
+              textToSpeech: false,
+              ...pro?.features,
+            },
+            ...pro,
+          };
+
+    // Inject Pro CSS via JavaScript
+    function injectProStyles() {
+      const styleId = "a1s-pro-styles";
+      if (document.getElementById(styleId)) return;
+
+      const style = document.createElement("style");
+      style.id = styleId;
+      style.innerHTML = `
+        /* Dark Mode (Pro) */
+        .a1s-dark-mode {
+          filter: invert(1) hue-rotate(180deg) brightness(0.95) !important;
+        }
+        
+        .a1s-dark-mode img, 
+        .a1s-dark-mode video,
+        .a1s-dark-mode iframe {
+          filter: invert(1) hue-rotate(180deg) !important;
+        }
+        
+        .a1s-dark-mode .a1s_sidebar {
+          background: #1a1a1a !important;
+          color: #fff !important;
+        }
+        
+        .a1s-dark-mode .a1s_float-button {
+          background: #2d2d2d !important;
+          color: #fff !important;
+        }
+        
+        .a1s-dark-mode .a1s_button {
+          background: #3d3d3d !important;
+          color: #fff !important;
+          border-color: #555 !important;
+        }
+        
+        .a1s-dark-mode .a1s_header {
+          background: #2d2d2d !important;
+        }
+        
+        .a1s-dark-mode .a1s_close-button {
+          color: #fff !important;
+        }
+        
+        .a1s-dark-mode .a1s_reset {
+          background: #4a4a4a !important;
+          color: #fff !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Inject Pro styles if dark mode feature is enabled
+    if (proConfig.enabled && proConfig.features.darkMode) {
+      injectProStyles();
+    }
 
     /* =========================================================
-       ROOT + STATE (UNCHANGED)
+       ROOT + STATE
     ========================================================= */
 
     const A1S_ROOT = () => document.getElementById("a1s-root") || document.body;
@@ -19,6 +88,9 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
       cursor: 0,
       textSpacing: 0,
       zoom: 0,
+      darkMode: false,
+      textToSpeech: false,
+      tooltip: false,
     };
 
     const A1S_ORIGINAL_FONT_SIZES = new WeakMap();
@@ -49,9 +121,12 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
     ].join(",");
 
     let a1sSidebar = null;
+    let speechSynthesis = null;
+    let isSpeaking = false;
+    let availableVoices = [];
 
     /* =========================================================
-       TOOLBAR UI (UNCHANGED STRUCTURE)
+       TOOLBAR UI
     ========================================================= */
 
     function createAccessibilityToolbar() {
@@ -83,7 +158,7 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
             <div class="a1s_buttons-grid"></div>
           </div>
           <div class="a1s_footer">
-            <button class="a1s_reset">&#x27F3; Reset All Settings</button>
+            <button class="a1s_reset">🔄 Reset All Settings</button>
           </div>
         `;
 
@@ -100,7 +175,7 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
     }
 
     /* =========================================================
-       BUTTON CREATION (ICONS PRESERVED)
+       BUTTON CREATION
     ========================================================= */
 
     function createButtons(grid) {
@@ -120,9 +195,22 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
         { text: "Cursor Size", icon: "🖱️", action: toggleCursor, max: 2 },
       ];
 
+      // Add Pro features if enabled
+      if (proConfig.enabled) {
+        if (proConfig.features.darkMode) {
+          buttons.push({ text: "Dark Mode", icon: "🌙", action: toggleDarkMode, className: "dark-mode-btn", pro: true });
+        }
+        if (proConfig.features.textToSpeech) {
+          buttons.push({ text: "Text-to-Speech", icon: "🔊", action: toggleTextToSpeech, className: "tts-btn", pro: true });
+        }
+      }
+
       buttons.forEach((btn) => {
         const el = document.createElement("button");
-        el.className = "a1s_button" + (btn.className ? " " + btn.className : "");
+        let className = "a1s_button";
+        if (btn.className) className += " " + btn.className;
+        if (btn.pro) className += " a1s_pro-button";
+        el.className = className;
         el.innerHTML = `
           <span class="a1s_icon">${btn.icon}</span>
           <span class="a1s_label">${btn.text}</span>
@@ -135,8 +223,8 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
     }
 
     /* =========================================================
-   BULLET RENDERING
-========================================================= */
+       BULLET RENDERING
+    ========================================================= */
 
     function renderBullets(btn, level) {
       const max = Number(btn.dataset.max || 0);
@@ -158,24 +246,8 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
     }
 
     /* =========================================================
-   MOMENTARY ACTIONS
-========================================================= */
-    // function applyFontZoom() {
-    //   const factor = 1 + A1S_STATE.fontZoom * 0.1;
-
-    //   A1S_ROOT()
-    //     .querySelectorAll(A1S_TEXT_SELECTORS)
-    //     .forEach((el) => {
-    //       // store original size once
-    //       if (!A1S_ORIGINAL_FONT_SIZES.has(el)) {
-    //         const originalSize = parseFloat(getComputedStyle(el).fontSize);
-    //         A1S_ORIGINAL_FONT_SIZES.set(el, originalSize);
-    //       }
-
-    //       const baseSize = A1S_ORIGINAL_FONT_SIZES.get(el);
-    //       el.style.fontSize = baseSize * factor + "px";
-    //     });
-    // }
+       FREE FEATURES
+    ========================================================= */
 
     function zoomIn(btn) {
       if (A1S_STATE.zoom >= 5) return;
@@ -194,145 +266,6 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
         });
 
       renderBullets(btn, A1S_STATE.zoom);
-    }
-
-    /* =========================================================
-   TOGGLES (ON / OFF)
-========================================================= */
-
-    function toggleHighContrast(btn) {
-      const root = A1S_ROOT();
-      root.classList.toggle("a1s_high-contrast");
-      btn.classList.toggle("active");
-    }
-
-    function toggleAnimations(btn) {
-      const root = A1S_ROOT();
-      root.classList.toggle("a1s_pause-animations");
-      btn.classList.toggle("active");
-    }
-
-    function toggleDyslexiaFont(btn) {
-      const root = A1S_ROOT();
-      root.classList.toggle("a1s_dyslexia-fonts");
-      btn.classList.toggle("active");
-    }
-
-    function toggleImages(btn) {
-      const root = A1S_ROOT();
-      root.classList.toggle("a1s_hide-images");
-      btn.classList.toggle("active");
-    }
-
-    /* =========================================================
-   MULTI-LEVEL FEATURES
-========================================================= */
-
-    function adjustLineHeight(btn) {
-      A1S_STATE.lineHeight = (A1S_STATE.lineHeight + 1) % 5;
-      A1S_ROOT().style.lineHeight = A1S_STATE.lineHeight === 0 ? "" : 1.6 + A1S_STATE.lineHeight * 0.2;
-      renderBullets(btn, A1S_STATE.lineHeight);
-    }
-
-    function toggleTextAlign(btn) {
-      const root = A1S_ROOT();
-      const classes = ["a1s_align-left", "a1s_align-center", "a1s_align-right", "a1s_align-justify"];
-
-      // remove all saturation classes
-      root.classList.remove(...classes);
-
-      // increment state
-      A1S_STATE.textAlign = (A1S_STATE.textAlign + 1) % 5;
-
-      // apply class if not default (0)
-      if (A1S_STATE.textAlign > 0) {
-        root.classList.add(classes[A1S_STATE.textAlign - 1]);
-      }
-
-      // update bullets
-      renderBullets(btn, A1S_STATE.textAlign);
-    }
-
-    // Toggle Saturations
-    function toggleSaturation(btn) {
-      const root = A1S_ROOT();
-      const classes = ["a1s_saturation-low", "a1s_saturation-high", "a1s_saturation-desaturate"];
-
-      // remove all saturation classes
-      root.classList.remove(...classes);
-
-      // increment state
-      A1S_STATE.saturation = (A1S_STATE.saturation + 1) % 4;
-
-      // apply class if not default (0)
-      if (A1S_STATE.saturation > 0) {
-        root.classList.add(classes[A1S_STATE.saturation - 1]);
-      }
-
-      // update bullets
-      renderBullets(btn, A1S_STATE.saturation);
-    }
-
-    // Toggle Cursor
-
-    function toggleCursor(btn) {
-      const root = A1S_ROOT();
-      root.classList.remove("a1s_cursor-medium", "a1s_cursor-large");
-
-      A1S_STATE.cursor = (A1S_STATE.cursor + 1) % 3;
-
-      if (A1S_STATE.cursor === 1) {
-        root.classList.add("a1s_cursor-medium");
-        root.style.cursor = "url(data:image/svg+xml,<svg ...></svg>) 10 10, auto";
-      }
-      if (A1S_STATE.cursor === 2) {
-        root.classList.add("a1s_cursor-large");
-        root.style.cursor = "url(data:image/svg+xml,<svg ...></svg>) 16 16, auto";
-      }
-      if (A1S_STATE.cursor === 0) {
-        root.style.cursor = "";
-      }
-
-      renderBullets(btn, A1S_STATE.cursor);
-    }
-
-    // Invert Colors
-    function toggleInvertColors(btn) {
-      const root = A1S_ROOT();
-      root.classList.toggle("a1s_invert-colors");
-      btn.classList.toggle("active");
-    }
-
-    // Text Spacing
-    function adjustTextSpacing(btn) {
-      A1S_STATE.textSpacing = (A1S_STATE.textSpacing || 0) + 1;
-      if (A1S_STATE.textSpacing > 4) A1S_STATE.textSpacing = 0;
-
-      const root = A1S_ROOT();
-      const spacing = ["", "0.05em", "0.1em", "0.2em", "0.3em"];
-      root.style.letterSpacing = spacing[A1S_STATE.textSpacing];
-      root.style.wordSpacing = spacing[A1S_STATE.textSpacing];
-
-      renderBullets(btn, A1S_STATE.textSpacing);
-    }
-
-    // Highlight Links
-    function highlightLinks(btn, forceReset = false) {
-      const root = A1S_ROOT();
-      const links = root.querySelectorAll("a");
-
-      // determine active state
-      const active = forceReset ? false : btn.classList.toggle("active");
-
-      links.forEach((a) => {
-        a.style.background = active ? "#444701" : "";
-        a.style.color = active ? "yellow" : "";
-      });
-
-      // ensure button state is correct on reset
-      if (forceReset && btn) {
-        btn.classList.remove("active");
-      }
     }
 
     function zoomOut(btn) {
@@ -354,24 +287,405 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
           }
         });
 
-      // update Zoom In bullets safely
       const zoomInBtn = Array.from(document.querySelectorAll(".a1s_button")).find(
         (b) => b.querySelector(".a1s_label")?.textContent === "Zoom In"
       );
       if (zoomInBtn) renderBullets(zoomInBtn, A1S_STATE.zoom);
 
-      // safe Zoom Out button
       const zoomOutBtn = document.querySelector(".a1s_button.zoom-out");
       if (zoomOutBtn && A1S_STATE.zoom <= 0) zoomOutBtn.classList.add("disabled");
       else if (zoomOutBtn) zoomOutBtn.classList.remove("disabled");
 
-      // update clicked button bullets
       if (btn) renderBullets(btn, A1S_STATE.zoom);
     }
 
+    function toggleHighContrast(btn) {
+      const root = A1S_ROOT();
+      root.classList.toggle("a1s_high-contrast");
+      btn.classList.toggle("active");
+    }
+
+    function toggleInvertColors(btn) {
+      const root = A1S_ROOT();
+      root.classList.toggle("a1s_invert-colors");
+      btn.classList.toggle("active");
+    }
+
+    function toggleAnimations(btn) {
+      const root = A1S_ROOT();
+      root.classList.toggle("a1s_pause-animations");
+      btn.classList.toggle("active");
+    }
+
+    function toggleDyslexiaFont(btn) {
+      const root = A1S_ROOT();
+      root.classList.toggle("a1s_dyslexia-fonts");
+      btn.classList.toggle("active");
+    }
+
+    function toggleImages(btn) {
+      const root = A1S_ROOT();
+      root.classList.toggle("a1s_hide-images");
+      btn.classList.toggle("active");
+    }
+
+    function adjustLineHeight(btn) {
+      A1S_STATE.lineHeight = (A1S_STATE.lineHeight + 1) % 5;
+      A1S_ROOT().style.lineHeight = A1S_STATE.lineHeight === 0 ? "" : 1.6 + A1S_STATE.lineHeight * 0.2;
+      renderBullets(btn, A1S_STATE.lineHeight);
+    }
+
+    function toggleTextAlign(btn) {
+      const root = A1S_ROOT();
+      const classes = ["a1s_align-left", "a1s_align-center", "a1s_align-right", "a1s_align-justify"];
+
+      root.classList.remove(...classes);
+
+      A1S_STATE.textAlign = (A1S_STATE.textAlign + 1) % 5;
+
+      if (A1S_STATE.textAlign > 0) {
+        root.classList.add(classes[A1S_STATE.textAlign - 1]);
+      }
+
+      renderBullets(btn, A1S_STATE.textAlign);
+    }
+
+    function toggleSaturation(btn) {
+      const root = A1S_ROOT();
+      const classes = ["a1s_saturation-low", "a1s_saturation-high", "a1s_saturation-desaturate"];
+
+      root.classList.remove(...classes);
+
+      A1S_STATE.saturation = (A1S_STATE.saturation + 1) % 4;
+
+      if (A1S_STATE.saturation > 0) {
+        root.classList.add(classes[A1S_STATE.saturation - 1]);
+      }
+
+      renderBullets(btn, A1S_STATE.saturation);
+    }
+
+    function toggleCursor(btn) {
+      const root = A1S_ROOT();
+      root.classList.remove("a1s_cursor-medium", "a1s_cursor-large");
+
+      A1S_STATE.cursor = (A1S_STATE.cursor + 1) % 3;
+
+      if (A1S_STATE.cursor === 1) {
+        root.classList.add("a1s_cursor-medium");
+      }
+      if (A1S_STATE.cursor === 2) {
+        root.classList.add("a1s_cursor-large");
+      }
+      if (A1S_STATE.cursor === 0) {
+        root.style.cursor = "";
+      }
+
+      renderBullets(btn, A1S_STATE.cursor);
+    }
+
+    function adjustTextSpacing(btn) {
+      A1S_STATE.textSpacing = (A1S_STATE.textSpacing || 0) + 1;
+      if (A1S_STATE.textSpacing > 4) A1S_STATE.textSpacing = 0;
+
+      const root = A1S_ROOT();
+      const spacing = ["", "0.05em", "0.1em", "0.2em", "0.3em"];
+      root.style.letterSpacing = spacing[A1S_STATE.textSpacing];
+      root.style.wordSpacing = spacing[A1S_STATE.textSpacing];
+
+      renderBullets(btn, A1S_STATE.textSpacing);
+    }
+
+    function highlightLinks(btn, forceReset = false) {
+      const root = A1S_ROOT();
+      const links = root.querySelectorAll("a");
+
+      const active = forceReset ? false : btn.classList.toggle("active");
+
+      links.forEach((a) => {
+        a.style.background = active ? "#444701" : "";
+        a.style.color = active ? "yellow" : "";
+      });
+
+      if (forceReset && btn) {
+        btn.classList.remove("active");
+      }
+    }
+
     /* =========================================================
-   RESET
-========================================================= */
+       PRO FEATURES
+    ========================================================= */
+
+    // Dark Mode (Pro)
+    function toggleDarkMode(btn) {
+      if (!proConfig.features.darkMode) return;
+
+      A1S_STATE.darkMode = !A1S_STATE.darkMode;
+      const root = A1S_ROOT();
+
+      if (A1S_STATE.darkMode) {
+        root.classList.add("a1s-dark-mode");
+        btn.classList.add("active");
+      } else {
+        root.classList.remove("a1s-dark-mode");
+        btn.classList.remove("active");
+      }
+    }
+
+    /* =========================================================
+       TEXT-TO-SPEECH (Hardcoded Indian Voice)
+    ========================================================= */
+
+    // Hardcoded TTS settings for Indian accent
+    const TTS_CONFIG = {
+      pitch: 1.0,
+      rate: 0.88,
+      volume: 1.0,
+    };
+
+    // Initialize voices
+    function initializeVoices() {
+      if (!speechSynthesis) {
+        speechSynthesis = window.speechSynthesis;
+      }
+
+      if (speechSynthesis) {
+        availableVoices = speechSynthesis.getVoices() || [];
+
+        if (availableVoices.length === 0) {
+          speechSynthesis.onvoiceschanged = () => {
+            availableVoices = speechSynthesis.getVoices() || [];
+          };
+        }
+      }
+    }
+
+    // Find best Indian voice (automatic, no user selection)
+    function findBestIndianVoice() {
+      // Ensure we have voices loaded
+      if (!availableVoices || availableVoices.length === 0) {
+        if (speechSynthesis) {
+          availableVoices = speechSynthesis.getVoices() || [];
+        }
+      }
+
+      if (availableVoices.length === 0) {
+        return null;
+      }
+
+      // Priority order for Indian accent voices
+      const priorityPatterns = [
+        { lang: "en-IN", keywords: ["google", "english", "india"] },
+        { lang: "hi-IN", keywords: ["google", "hindi"] },
+        { lang: "mr-IN", keywords: ["google", "marathi"] },
+        { lang: "en-IN", keywords: [] },
+        { lang: "hi", keywords: ["google", "hindi"] },
+        { lang: "mr", keywords: ["google", "marathi"] },
+        { lang: "en-US", keywords: ["google"] },
+        { lang: "en-GB", keywords: ["google"] },
+      ];
+
+      // Look for Indian voices
+      for (const pattern of priorityPatterns) {
+        const found = availableVoices.find((v) => {
+          const vLang = v.lang || "";
+          const vName = v.name.toLowerCase();
+
+          let langMatch = false;
+          if (pattern.lang === "en-IN") {
+            langMatch = vLang === "en-IN" || vLang.startsWith("en-");
+          } else if (pattern.lang === "hi-IN") {
+            langMatch = vLang === "hi-IN" || vLang === "hi";
+          } else if (pattern.lang === "mr-IN") {
+            langMatch = vLang === "mr-IN" || vLang === "mr";
+          } else {
+            langMatch = vLang === pattern.lang || vLang.startsWith(pattern.lang + "-");
+          }
+
+          const keywordMatch = pattern.keywords.length === 0 || pattern.keywords.some((kw) => vName.includes(kw));
+
+          return langMatch && keywordMatch;
+        });
+
+        if (found) return found;
+      }
+
+      // Any Indian language voice
+      const indianVoice = availableVoices.find((v) => {
+        const lang = v.lang || "";
+        return (
+          lang === "en-IN" ||
+          lang === "hi-IN" ||
+          lang === "mr-IN" ||
+          lang.startsWith("en-") ||
+          lang.startsWith("hi-") ||
+          lang.startsWith("mr-")
+        );
+      });
+
+      if (indianVoice) return indianVoice;
+
+      // Prefer Google voices
+      const googleVoice = availableVoices.find((v) => v.name.toLowerCase().includes("google"));
+      if (googleVoice) return googleVoice;
+
+      // Final fallback
+      return availableVoices[0];
+    }
+
+    // Text-to-Speech (Pro) - Hardcoded Indian voice, no controls
+    function toggleTextToSpeech(btn) {
+      if (!proConfig.features.textToSpeech) return;
+
+      if (!("speechSynthesis" in window)) {
+        alert("Text-to-Speech is not supported in this browser");
+        return;
+      }
+
+      A1S_STATE.textToSpeech = !A1S_STATE.textToSpeech;
+
+      if (A1S_STATE.textToSpeech) {
+        btn.classList.add("active");
+        enableTextToSpeechHover();
+      } else {
+        btn.classList.remove("active");
+        disableTextToSpeechHover();
+      }
+    }
+
+    let ttsHoverElements = [];
+
+    function enableTextToSpeechHover() {
+      if (!speechSynthesis) {
+        speechSynthesis = window.speechSynthesis;
+        initializeVoices();
+      }
+
+      const root = A1S_ROOT();
+
+      // Add hover event listeners to text elements
+      const textElements = root.querySelectorAll(
+        "p, h1, h2, h3, h4, h5, h6, li, td, th, blockquote, article, section, main, div, span, a, label"
+      );
+
+      textElements.forEach((el) => {
+        if (el.hasAttribute("data-tts-listener")) return;
+
+        el.setAttribute("data-tts-listener", "true");
+
+        const mouseenterHandler = (e) => {
+          if (speechSynthesis) {
+            speechSynthesis.cancel();
+          }
+
+          const textContent = getElementTextContent(e.target);
+
+          if (textContent.trim()) {
+            speakText(textContent);
+          }
+        };
+
+        el.addEventListener("mouseenter", mouseenterHandler);
+        ttsHoverElements.push({ element: el, handler: mouseenterHandler });
+      });
+    }
+
+    function disableTextToSpeechHover() {
+      ttsHoverElements.forEach(({ element, handler }) => {
+        element.removeEventListener("mouseenter", handler);
+        element.removeAttribute("data-tts-listener");
+      });
+
+      ttsHoverElements = [];
+      stopTextToSpeech();
+    }
+
+    function speakText(text) {
+      if (!speechSynthesis) {
+        speechSynthesis = window.speechSynthesis;
+        initializeVoices();
+      }
+
+      if (!speechSynthesis) return;
+
+      speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+
+      // Use hardcoded Indian voice
+      const selectedVoice = findBestIndianVoice();
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+
+      // Apply hardcoded settings
+      utterance.pitch = TTS_CONFIG.pitch;
+      utterance.rate = TTS_CONFIG.rate;
+      utterance.volume = TTS_CONFIG.volume;
+
+      utterance.onstart = () => {
+        isSpeaking = true;
+      };
+
+      utterance.onend = () => {
+        isSpeaking = false;
+      };
+
+      utterance.onerror = () => {
+        isSpeaking = false;
+      };
+
+      speechSynthesis.speak(utterance);
+    }
+
+    function getElementTextContent(element) {
+      // Skip hidden elements
+      if (element.offsetParent === null) return "";
+
+      // Skip script and style tags
+      if (element.tagName === "SCRIPT" || element.tagName === "STYLE") return "";
+
+      // Get text content, but limit length
+      const text = element.textContent ? element.textContent.trim() : "";
+
+      if (text) {
+        // Return limited text
+        return text.substring(0, 500);
+      }
+
+      return "";
+    }
+
+    function stopTextToSpeech() {
+      if (speechSynthesis) {
+        speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+    }
+
+    function getPageTextContent(element) {
+      const textSelectors = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "td", "th", "blockquote", "article", "section", "main", "div"];
+
+      let text = "";
+
+      element.querySelectorAll(textSelectors.join(",")).forEach((el) => {
+        // Skip hidden elements
+        if (el.offsetParent === null) return;
+        // Skip script and style tags
+        if (el.tagName === "SCRIPT" || el.tagName === "STYLE") return;
+
+        const textContent = el.textContent.trim();
+        if (textContent) {
+          text += textContent + " ";
+        }
+      });
+
+      return text.substring(0, 5000); // Limit to 5000 characters
+    }
+
+    /* =========================================================
+       RESET
+    ========================================================= */
     function resetAll() {
       const root = A1S_ROOT();
 
@@ -390,7 +704,8 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
         "a1s_align-left",
         "a1s_align-center",
         "a1s_align-right",
-        "a1s_align-justify"
+        "a1s_align-justify",
+        "a1s-dark-mode"
       );
 
       // reset inline styles
@@ -416,6 +731,13 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
       Object.keys(A1S_STATE).forEach((k) => {
         A1S_STATE[k] = 0;
       });
+      A1S_STATE.darkMode = false;
+
+      // Disable text-to-speech hover and clean up listeners
+      if (A1S_STATE.textToSpeech) {
+        disableTextToSpeechHover();
+        A1S_STATE.textToSpeech = false;
+      }
 
       // reset buttons UI
       document.querySelectorAll(".a1s_button").forEach((btn) => {
@@ -424,7 +746,7 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
         if (bullets) bullets.innerHTML = "";
       });
 
-      // ✅ Safe Zoom Out button handling
+      // Safe Zoom Out button handling
       const zoomOutBtn = document.querySelector(".a1s_button.zoom-out");
       if (zoomOutBtn) {
         zoomOutBtn.classList.add("disabled");
@@ -432,7 +754,20 @@ export default function AccessibilityTool({ right, bottom, top, left, bgColor, t
     }
 
     createAccessibilityToolbar();
-  }, [right, bottom, top, left, bgColor, textColor]);
+
+    // Cleanup function to remove toolbar on unmount
+    return () => {
+      const floatBtn = document.querySelector(".a1s_float-button");
+      const sidebar = document.querySelector(".a1s_sidebar");
+      const proStyles = document.getElementById("a1s-pro-styles");
+
+      if (floatBtn) floatBtn.remove();
+      if (sidebar) sidebar.remove();
+      if (proStyles) proStyles.remove();
+
+      window.__A1S_INIT__ = false;
+    };
+  }, [right, bottom, top, left, bgColor, textColor, pro]);
 
   return null;
 }
