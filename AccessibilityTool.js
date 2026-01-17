@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 
 export default function AccessibilityTool({ right, bottom, top, left, bgColor, textColor, pro = false }) {
